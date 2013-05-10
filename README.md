@@ -1,0 +1,4 @@
+tct
+===
+
+text counter
