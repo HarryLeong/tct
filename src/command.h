@@ -1,5 +1,5 @@
 //This is a part of tct, tct is a tool for counting text file.
-//Copyright (C) 2013  Harry Leong(https://github.com/HarryLeong/tct)
+//Copyright (C) 2016  Harry Leong(https://github.com/HarryLeong/tct)
 
 //This program is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
