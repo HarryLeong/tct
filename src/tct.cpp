@@ -1,5 +1,5 @@
 //This is a part of tct, tct is a tool for counting text file.
-//Copyright (C) 2013  Harry Leong(https://github.com/HarryLeong/tct)
+//Copyright (C) 2016  Harry Leong(https://github.com/HarryLeong/tct)
 
 //This program is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -15,16 +15,13 @@
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-#include "bufout.h"
-#include "tcout.h"
+
 #include "utils.h"
 #include "command.h"
 #include "tct.h"
 #include "file.h"
 
-#define BOOST_LIB_DIAGNOSTIC
-#include "boost/algorithm/string.hpp"
-
+#include <assert.h>
 #include <ctime>
 #include <vector>
 #include <utility>
@@ -34,67 +31,57 @@
 #include <iostream>
 #include <algorithm>
 #include <thread>
+#include "utils.h"
 
 
 namespace tct {
 
-	int count_file(File const &fname,Files const &exts, bool check_ext, char *buf, int buflen, Command const &cmd)
+	int count_file(File const &fname, char *buf, int buflen, Command const &cmd)
 	{
-		if(check_ext) {
-			if(!check_extensions(fname, exts)) {
-				return 0;
-			}
-		}
 		int err = 0;
-		int nln = count_file_nlines(fname, &err, buf, buflen);
-		if(err == 0) {
-			if(cmd.show_file) {
-				if(cmd.show_file_nlines) {
-					tcout() << fname << ": " << nln << ln;
-				} else {
-					tcout() << fname << ln;
-				}
+		int nln = 0;
+		std::pair<int&, int&>(err, nln) = count_file_nlines(fname, buf, buflen);
+		if (err != 0) {
+			printf("error: %s", fname.c_str());
+		}
+		if (cmd.show_file) {
+			if (cmd.show_file_nlines) {
+				printf("%s: %d\n", fname.c_str(), nln);
 			}
-			return nln;
+			else {
+				printf("%s\n", fname.c_str());
+			}
 		}
-		else{
-			tcout() << "Error(file): " << fname << ln;
-			return 0;
-		}
+		return nln;
 	}
 
 	struct ThreadWork
 	{
-		ThreadWork(Files::iterator begin,Files::iterator end, Files *exts, bool check_ext,Command const &cmd)
+		ThreadWork(Files::iterator begin,Files::iterator end, Files *exts, Command const &cmd)
 			: command(cmd)
 		{
 			nln = 0;
 			this->begin = begin;
 			this->end = end;
-			this->exts = exts;
-			this->check_ext = check_ext;
 		}
 
 		std::thread start() {
 			return std::thread([this]() {
 				int buflen = 128 *1024;
-				char *buf = new char[buflen];
+				std::unique_ptr<char[]> buf(new char[buflen]);
 				for(File &fname : range(this->begin, this->end)) {
-					this->nln += count_file(fname, *exts, check_ext, buf , buflen, command);
+					this->nln += count_file(fname, buf.get() , buflen, command);
 				}
-				delete buf;
 			});
 		}
 
 		int nln;
 		Files::iterator begin;
 		Files::iterator end;
-		Files *exts;
-		bool check_ext;
 		Command const &command;
 	};
 
-	int count_files(Files &files,Files &exts, bool check_ext, int ntread, Command const &cmd)
+	int count_files(Files &files,Files &exts, int ntread, Command const &cmd)
 	{
 		if(ntread == 0) {
 			ntread = (int)std::thread::hardware_concurrency();
@@ -109,9 +96,9 @@ namespace tct {
 		int ntfiles = (int)files.size() / ntread;
 		for(int i = 0;i < ntread; ++i) {
 			if(i == ntread - 1) {
-				threadworks.push_back(ThreadWork(iter,files.end(), &exts, check_ext, cmd));
+				threadworks.push_back(ThreadWork(iter, files.end(), &exts, cmd));
 			} else {
-				threadworks.push_back(ThreadWork(iter,iter + ntfiles, &exts, check_ext, cmd));
+				threadworks.push_back(ThreadWork(iter, iter + ntfiles, &exts, cmd));
 			}
 			iter += ntfiles;
 			assert(iter <= files.end());
@@ -132,8 +119,6 @@ namespace tct {
 
 	int trim(Directories *pdirs)
 	{
-		using namespace boost::filesystem;
-		using namespace boost::algorithm;
 		Directories &dirs = *pdirs;
 
 		typedef std::pair<std::string, int> DI;
@@ -169,7 +154,7 @@ namespace tct {
 			for(; iter2 != rdirs.end(); ) {
 				auto tmp = iter2;
 				++iter2;
-				if(boost::algorithm::starts_with(tmp->first, iter->first)) {
+				if(starts_with(tmp->first, iter->first)) {
 					rdirs.erase(tmp);
 					edirs.push_back(tmp->second);
 					break;
@@ -181,7 +166,7 @@ namespace tct {
 			for(auto iter = udirs.begin(); iter != udirs.end();) {
 				auto tmp = iter;
 				++iter;
-				if(boost::algorithm::starts_with(tmp->first, dir.first)) {
+				if(starts_with(tmp->first, dir.first)) {
 					rdirs.erase(tmp);
 					edirs.push_back(tmp->second);
 					break;
@@ -224,7 +209,6 @@ namespace tct {
 			return err; 
 		}
 
-		using namespace boost;
 		using namespace std;
 		int nlines = 0;
 		int nfiles = 0;
@@ -233,13 +217,13 @@ namespace tct {
 
 			Files fs;
 
-			push_files_t args;
+			push_files_args_t args;
 			args.pextensions = &cmd.extensions;
 			args.onNonExsit = [](path const &ph) {
-				tcout() << "Error: Non-exsit file/direcotry: " << ph.string() << ln;
+				printf("Error: Non-exsit file/direcotry: %s", ph.string().c_str());
 			};
 			args.onNotDirectory = [](path const &ph) {
-				tcout() << "Error: Not Directory: " << ph.string() << ln;
+				printf("Error: Not Directory: %s", ph.string().c_str());
 			};
 			push_files(&fs, cmd.directories, args);
 
@@ -259,31 +243,31 @@ namespace tct {
 
 			fs.insert(fs.end(), subfiles.begin(), subfiles.end());
 
-			nlines += count_files(fs, cmd.extensions, false, cmd.nthreads, cmd);
+			nlines += count_files(fs, cmd.extensions, cmd.nthreads, cmd);
 
 			nfiles = (int)fs.size();
-		} catch(...) {
-			tcout() << "ERROR(interanl): Internal error and exit!" << ln;
+		} catch(std::exception const &e) {
+			printf("internal error: %s!\n", e.what());
 			err = 1;
 		}
-		if(cmd.show_nfiles) {
-			tcout() << "count files: " << nfiles << ln;
+
+		if (cmd.show_nfiles) {
+			printf("files: %d\n", nfiles);
 		}
-		if(cmd.show_nlines) {
-			tcout() << "count lines: " << nlines << ln;
+		if (cmd.show_nlines) {
+			printf("lines: %d\n", nlines);
 		}
-		auto time = clock() - start_time;
-		if(cmd.show_time) {
-			tcout() << "time: " << time << ln;
+		if (cmd.show_time) {
+			auto time = clock() - start_time;
+			printf("time: %d ms", time);
 		}
-		tcout().flush();
 		return err;
 
 	}
 
 }
 
-const char *licence = "Copyright (C) 2013  Harry Leong(https://github.com/HarryLeong/tct)\n"
+const char *licence = "Copyright (C) 2016  Harry Leong (https://github.com/HarryLeong/tct)\n"
 	"\n"
 	"This program is free software: you can redistribute it and/or modify"
 	"it under the terms of the GNU General Public License as published by"
@@ -304,15 +288,14 @@ int main(int argc, char *argv[])
 	tct::Command command;
 	auto err = command.parse(argc, argv);
 	if(err.code() != 0) {
-		tct::tcout() << err.string() << tct::ln;
-		tct::tcout() << "use 'tct -h' for help." << tct::ln;
+		printf("%s\n Use 'tct -h' for help.\n", err.string().c_str());
 		return 1;
 	}
 	if(command.show_help || argc == 1) {
-		tct::tcout() << command.help << tct::ln;
+		printf("%s\n", command.help.c_str());
 	}
 	if(command.show_licence) {
-		tct::tcout() << licence << tct::ln;
+		printf("%s\n", licence);
 	}
 	return work(command);
 

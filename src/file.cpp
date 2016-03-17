@@ -1,5 +1,5 @@
 //This is a part of tct, tct is a tool for counting text file.
-//Copyright (C) 2013  Harry Leong(https://github.com/HarryLeong/tct)
+//Copyright (C) 2016  Harry Leong(https://github.com/HarryLeong/tct)
 
 //This program is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -15,12 +15,18 @@
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-#include "file.h"
 
-#ifdef _MSC_VER
+#include "file.h"
+#include <assert.h>
+#include <experimental/filesystem>
+using std::experimental::filesystem::absolute;
+using std::experimental::filesystem::directory_iterator;
+using std::experimental::filesystem::is_regular_file;
+
+#ifdef sa
 # define fopen fopen_
 
-FILE *fopen_(char const *name,char const *mode)
+FILE *fopen_(char const *name, char const *mode)
 {
 	FILE *file = nullptr;
 	auto err = fopen_s(&file, name, mode);
@@ -52,20 +58,18 @@ namespace tct {
 		return check_extensions(file.string(), exts);
 	}
 
-	int count_file_nlines(std::string const &name, int *perr, char *buf, int buflen)
+	std::pair<int,int> count_file_nlines(std::string const &name, char *buf, int buflen)
 	{
-		assert(perr);
 		assert(buf);
 		assert(buflen > 8);
-		int &err = *perr;
-		err = 0;
-
+		int err = 0;
 		int nln = 0;
+		std::pair<int&, int &> result(err, nln);
 
-		FILE *file = fopen(name.c_str(),"r");
+		FILE *file = fopen(name.c_str(), "r");
 		if(file == nullptr) {
 			err = 1;
-			return 0;
+			return result;
 		}
 		AutoClose ac(file);
 
@@ -77,10 +81,10 @@ namespace tct {
 				int ferr = ferror(file);
 				if(ferr != 0) {
 					err = 1;
-					return 0;
+					return result;
 				}
 			}
-			for(int i = 0;i < nread; ++i) {
+			for(int i = 0; i < nread; ++i) {
 				if(buf[i] == '\n') {
 					++nln;
 				}
@@ -96,14 +100,12 @@ namespace tct {
 		if(!last_is_newline) {
 			++nln;
 		}
-		return nln;
+		return result;
 	}
 
-	void push_files(Files *pfiles, path const &ph, bool recur, push_files_t const &args, bool check)
+	void push_files(Files *pfiles, path const &ph, bool recur, push_files_args_t const &args, bool check)
 	{
-		using namespace boost::filesystem;
 		using namespace std;
-		Files &files = *pfiles;
 		if(check) {
 			if(!exists(ph)) {
 				args.onNonExsit(ph);
@@ -113,25 +115,26 @@ namespace tct {
 				return;
 			}
 		}
+
 		directory_iterator  iter(ph);
 		directory_iterator  end;
 
 		for(iter; iter != end; ++iter) {
-			path const &ph = (*iter).path();
+			path const &ph = iter->path();
 			if(is_directory(ph)) {
 				if(recur) {
-					push_files(&files, ph, true, args, false);
+					push_files(pfiles, ph, true, args, false);
 					continue;
 				}
-			} else if(is_regular(ph)) {
+			} else if(is_regular_file(ph)) {
 				if(check_extensions(ph.string(), args.extensions())) {
-					files.push_back(ph.string());
+					pfiles->push_back(ph.string());
 				}
 			}
 		}
 	}
 
-	void push_files(Files *pfiles, Directories const &phs, push_files_t const &args, bool check)
+	void push_files(Files *pfiles, Directories const &phs, push_files_args_t const &args, bool check)
 	{
 		for(Directory const &dir: phs) {
 			push_files(pfiles, path(dir.name), dir.recur, args, check);

@@ -1,5 +1,5 @@
 //This is a part of tct, tct is a tool for counting text file.
-//Copyright (C) 2013  Harry Leong(https://github.com/HarryLeong/tct)
+//Copyright (C) 2016  Harry Leong(https://github.com/HarryLeong/tct)
 
 //This program is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -14,45 +14,33 @@
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
-#ifndef ___tct_utils
-#define ___tct_utils
+#ifndef TCT_utils
+#define TCT_utils
 
 #include <stdio.h>
+#include <string>
 
 namespace tct {
 	
 	bool isAlpha(char c);
-	
+
+	bool starts_with(std::string const &a, std::string const &b);
+
 	struct AutoClose
 	{
 		~AutoClose();
-		AutoClose(FILE *file)
-		{ 
-			this->file = nullptr;
-			setFile(file);
-		}
-		AutoClose()
-		{
-			this->file = nullptr;
-			setFile(file); 
-		}
-		void setFile(FILE *file)
-		{ this->file = file; }
+		AutoClose(FILE *f) : fFile(nullptr) { setFile(f); }
+		AutoClose() : fFile(nullptr) { setFile(nullptr); }
+		void setFile(FILE *f) { fFile =f; }
 	private:
-		FILE *file;
+		FILE *fFile;
 	};
 
 	template< class I>
 	struct Range {
-		Range(I b, I e)
-		{ _begin = b, _end = e; }
-		
-		I begin()
-		{ return _begin; }
-		
-		I end()
-		{ return _end; }
+		Range(I b, I e) { _begin = b, _end = e; }		
+		I begin() { return _begin; }		
+		I end() { return _end; }
 	private:
 		I _begin;
 		I _end;
@@ -67,7 +55,7 @@ namespace tct {
 	template<class R, class T >
 	bool contain(R const &range, T const &val)
 	{
-		return std::find(begin(range) ,end(range), val) != end(range);
+		return std::find(range.begin(), range.end(), val) != range.end();
 	}
 
 }

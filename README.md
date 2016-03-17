@@ -1,7 +1,7 @@
 tct
 ===
 
-Sorry! windows only yet! But it is eary to port to other platform(just use boost, stdlib)!If You Are Chinese,Pelase Read `中文README.md`,Else,Sorry Again, You Must Continue To Read Chinglist.
+If You Are Chinese,Pelase Read `中文README.md`, Else, Sorry Again, You Must Continue To Read Chinglist.
 
 ##Abstract
 This is a CUI tool for counting the number of files in some directories.

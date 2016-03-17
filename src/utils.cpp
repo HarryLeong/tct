@@ -1,5 +1,5 @@
 //This is a part of tct, tct is a tool for counting text file.
-//Copyright (C) 2013  Harry Leong(https://github.com/HarryLeong/tct)
+//Copyright (C) 2016  Harry Leong(https://github.com/HarryLeong/tct)
 
 //This program is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
 
 
 #include "utils.h"
-#include "tcout.h"
 
 #include <exception>
 #include <stdexcept>
@@ -29,14 +28,19 @@ namespace tct {
 	{
 		return isascii(c) && isalpha(c);
 	}
+	bool starts_with(std::string const &a, std::string const &b) {
+		auto p = a.c_str();
+		auto q = b.c_str();
+		for (; *p == *q && *q != '\0'; ++p, ++q) {
+		}
+		return *q == '\0';
+	}
 
 	AutoClose::~AutoClose()
 	{
-		if(file != nullptr) {
-			int err = fclose(file);
-			if(err != 0) {
-				tcout() << "failed to close file!"
-					<< ln;
+		if(fFile != nullptr) {
+			if(fclose(fFile) != 0) {
+				printf("error: failed to close file!");
 			}
 		}
 	}

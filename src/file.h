@@ -1,5 +1,5 @@
 //This is a part of tct, tct is a tool for counting text file.
-//Copyright (C) 2013  Harry Leong(https://github.com/HarryLeong/tct)
+//Copyright (C) 2016  Harry Leong(https://github.com/HarryLeong/tct)
 
 //This program is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -14,22 +14,19 @@
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef ___tct_filesystem
-#define ___tct_filesystem
 
-#include "boost/filesystem.hpp"
+#ifndef TCT_filesystem
+#define TCT_filesystem
+#define _CRT_SECURE_NO_WARNINGS
 #include "tct.h"
 #include "utils.h"
 
 #include <string>
 #include <vector>
 #include <functional>
+#include <assert.h>
 
 namespace tct {
-
-	using boost::filesystem::path;
-	using boost::filesystem::absolute;	
-	using boost::filesystem::is_regular;
 
 	template< class String >
 	std::string uniform(String &&path)
@@ -37,7 +34,8 @@ namespace tct {
 		std::string tmp = std::forward<String>(path);
 		for(char &ch : tmp) {
 			if(ch == '\\' || ch == '/') {
-				ch = (char)path::preferred_separator;
+				ch = '/';
+				//ch = (char)path::preferred_separator;
 			}
 		}
 		return std::move(tmp);
@@ -59,11 +57,11 @@ namespace tct {
 	bool check_extensions(std::string const &name, std::vector<std::string> const &exts);
 	bool check_extensions(path const &ph, std::vector<std::string> const &exts);
 
-	int count_file_nlines(std::string const &filename,int *perr, char *buf, int buflen);
+	std::pair<int, int> count_file_nlines(std::string const &filename, char *buf, int buflen);
 
-	struct push_files_t
+	struct push_files_args_t
 	{
-		push_files_t()
+		push_files_args_t()
 		{ pextensions = nullptr; }
 		std::vector<std::string> const &extensions() const
 		{ 
@@ -75,8 +73,8 @@ namespace tct {
 		std::function<void(path const &ph)> onNotDirectory;
 	};
 
-	void push_files(Files *files, path const &ph, bool recur, push_files_t const &args, bool check = true);
-	void push_files(Files *files, Directories const &phs, push_files_t const &args, bool check = true);
+	void push_files(Files *files, path const &ph, bool recur, push_files_args_t const &args, bool check = true);
+	void push_files(Files *files, Directories const &phs, push_files_args_t const &args, bool check = true);
 
 }
 

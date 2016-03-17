@@ -1,5 +1,5 @@
 //This is a part of tct, tct is a tool for counting text file.
-//Copyright (C) 2013  Harry Leong(https://github.com/HarryLeong/tct)
+//Copyright (C) 2016  Harry Leong(https://github.com/HarryLeong/tct)
 
 //This program is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -14,38 +14,33 @@
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
 #ifndef ___tct_tct
 #define ___tct_tct
 
 #include <string>
 #include <utility>
 #include <vector>
+#include <filesystem>
+#include <experimental/filesystem>
 
 namespace tct {
 
+	using std::experimental::filesystem::path;
 	typedef std::string File;
 	typedef std::vector<File> Files;
+
 	struct Directory
 	{
-	private:
-		Directory(Directory const &r);
 	public:
 		
-		template<class String>
-		Directory(String &&str,bool recur) : name(std::forward<String>(str)) {
-			this->recur = recur;
+		Directory(std::string const &str, bool re) :
+			recur(re), name(str) {
 		}
-
-		Directory dup() {
-			return Directory(name, recur);
-		}
-
-		Directory(Directory &&r) :
-			name(move(r.name))
-		{ recur = r.recur; }
-
-		bool recur;
-		File name;
+		Directory(Directory &&r) = default;
+		Directory(Directory const &r) = default;
+		Directory &operator=(Directory &&r) = default;
+		Directory &operator=(Directory const &r) = default;
 		bool operator<(Directory const &r)
 		{
 			if(recur < r.recur) return true;
@@ -57,6 +52,9 @@ namespace tct {
 			return recur == r.recur
 				&& name == r.name;
 		}
+
+		bool recur;
+		std::string name;
 	};
 	typedef std::vector<Directory> Directories;
 
