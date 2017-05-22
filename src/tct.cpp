@@ -90,10 +90,7 @@ namespace tct {
 	{
 		auto &ntread = *pntread;
 		if(ntread == 0) {
-			ntread = (int)std::thread::hardware_concurrency();
-			if(ntread == 0) {
-				ntread = 1;
-			}
+			ntread = 1;
 		}
 		std::vector<std::thread> threads;
 		std::vector<ThreadWork> threadworks;
