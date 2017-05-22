@@ -86,8 +86,9 @@ namespace tct {
 	static_assert(!std::is_copy_assignable_v<std::thread>, "");
 	static_assert(!std::is_copy_constructible_v<std::thread>, "");
 
-	int count_files(Files &files,Files &exts, int ntread, Command const &cmd)
+	int count_files(Files &files,Files &exts, int *pntread, Command const &cmd)
 	{
+		auto &ntread = *pntread;
 		if(ntread == 0) {
 			ntread = (int)std::thread::hardware_concurrency();
 			if(ntread == 0) {
@@ -251,7 +252,7 @@ namespace tct {
 
 			fs.insert(fs.end(), subfiles.begin(), subfiles.end());
 
-			nlines += count_files(fs, cmd.extensions, cmd.nthreads, cmd);
+			nlines += count_files(fs, cmd.extensions, &cmd.nthreads, cmd);
 
 			nfiles = (int)fs.size();
 		} catch(std::exception const &e) {
@@ -268,7 +269,10 @@ namespace tct {
 		if (cmd.show_time) {
 			auto time = std::chrono::steady_clock::now() - start_time;
 			auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(time);
-			printf("time: %d ms", (int)ms.count());
+			printf("time: %d ms\n", (int)ms.count());
+		}
+		if (cmd.show_nthreads) {
+			printf("threads: %d\n", (int)cmd.nthreads);
 		}
 		return err;
 

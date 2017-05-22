@@ -120,6 +120,14 @@ namespace tct {
 				show_nlines = val;
 				return true;
 		});
+		opts.add("show-nthreads",
+			"",
+			"Show number of threads",
+			bool(),
+			[&](bool val, std::string *) {
+			show_nthreads = val;
+			return true;
+		});
 		opts.add("help",
 			"h",
 			"Show help",

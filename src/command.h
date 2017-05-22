@@ -35,6 +35,7 @@ namespace tct {
 		bool show_time;	
 		bool show_help;
 		bool show_licence;
+		bool show_nthreads;
 		int nthreads;
 		Files files;
 		Files extensions;
