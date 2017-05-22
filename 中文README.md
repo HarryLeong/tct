@@ -14,26 +14,11 @@ tct
 使用`tct --help`来看看具体怎么使用.
 
 ##How to build
-源代码基于c++11.
-它依赖于boost库和标准库.
-如果你使用VS2012(Express版本就可以了,它免费).那么你可以通过以下步骤来编译.
+源代码基于c++11, 尤其是filesystem库.
+如果你使用VS2015或更高级版本(Express版本就可以了,它免费).那么你可以通过以下步骤来编译.
 
-*   首先,你一定要先编译boost库,它需要boost filesystem模块.
+*   下载并且安装cmake (>=3.8可以工作，更低版本不确定)
 
-*   下载并且安装cmake
+*   双击运行`build-win32.bat`
 
-*   打开cmd,输入`cmkae`如果一切正常,你应该得到一堆输出.
-
-*   打开`CMakeLists.txt`并且修改如下变量.
-
-    (1)将include_directories( "../boost/boost_1_53_0/build/include/boost-1_53")改为
-    include_directories( "your/boost/incude/path")
-
-    (2)将link_directories("../boost/boost_1_53_0/build/lib") 改为
-    link_directories( "your/boost/lib/path(this file contains .lib .dll ...)")
-
-*   将boost的dll所在目录添加到`PATH`环境变量.
-
-*   运行`build-win32.bat`
-
-*   到`tct/../tct-win32/`目录,应该可以看到`tct.sln`(你应该知道是什么吧).
+*   到`tct-win32/`目录,应该可以看到`tct.sln`(你应该知道是什么吧).
