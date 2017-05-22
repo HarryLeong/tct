@@ -21,6 +21,8 @@
 #include "tct.h"
 #include "file.h"
 
+#include "utils.h"
+
 #include <assert.h>
 #include <ctime>
 #include <vector>
@@ -31,8 +33,7 @@
 #include <iostream>
 #include <algorithm>
 #include <thread>
-#include "utils.h"
-
+#include <chrono>
 
 namespace tct {
 
@@ -212,7 +213,8 @@ namespace tct {
 		using namespace std;
 		int nlines = 0;
 		int nfiles = 0;
-		clock_t start_time = clock();
+
+		auto start_time = std::chrono::steady_clock::now();
 		try {
 
 			Files fs;
@@ -258,8 +260,9 @@ namespace tct {
 			printf("lines: %d\n", nlines);
 		}
 		if (cmd.show_time) {
-			auto time = clock() - start_time;
-			printf("time: %d ms", time);
+			auto time = std::chrono::steady_clock::now() - start_time;
+			auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(time);
+			printf("time: %d ms", (int)ms.count());
 		}
 		return err;
 
