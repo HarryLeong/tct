@@ -58,29 +58,33 @@ namespace tct {
 
 	struct ThreadWork
 	{
-		ThreadWork(Files::iterator begin,Files::iterator end, Files *exts, Command const &cmd)
+		ThreadWork(Files files, Files *exts, Command const &cmd)
 			: command(cmd)
 		{
 			nln = 0;
-			this->begin = begin;
-			this->end = end;
+			fFiles = std::move(files);
 		}
 
 		std::thread start() {
 			return std::thread([this]() {
 				int buflen = 128 *1024;
 				std::unique_ptr<char[]> buf(new char[buflen]);
-				for(File &fname : range(this->begin, this->end)) {
+				for(File &fname : fFiles) {
 					this->nln += count_file(fname, buf.get() , buflen, command);
 				}
 			});
 		}
 
 		int nln;
-		Files::iterator begin;
-		Files::iterator end;
+		Files fFiles;
 		Command const &command;
 	};
+	static_assert(!std::is_move_assignable_v<ThreadWork>, "");
+	static_assert(!std::is_copy_assignable_v<ThreadWork>, "");
+	static_assert(std::is_move_constructible_v<ThreadWork>, "");
+
+	static_assert(!std::is_copy_assignable_v<std::thread>, "");
+	static_assert(!std::is_copy_constructible_v<std::thread>, "");
 
 	int count_files(Files &files,Files &exts, int ntread, Command const &cmd)
 	{
@@ -97,9 +101,11 @@ namespace tct {
 		int ntfiles = (int)files.size() / ntread;
 		for(int i = 0;i < ntread; ++i) {
 			if(i == ntread - 1) {
-				threadworks.push_back(ThreadWork(iter, files.end(), &exts, cmd));
+				Files files(iter, files.end());
+				threadworks.push_back(ThreadWork(std::move(files), &exts, cmd));
 			} else {
-				threadworks.push_back(ThreadWork(iter, iter + ntfiles, &exts, cmd));
+				Files files(iter, iter + ntfiles);
+				threadworks.push_back(ThreadWork(std::move(files), &exts, cmd));
 			}
 			iter += ntfiles;
 			assert(iter <= files.end());
