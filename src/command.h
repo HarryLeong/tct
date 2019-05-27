@@ -39,6 +39,7 @@ namespace tct {
 		int nthreads;
 		Files files;
 		Files extensions;
+		std::vector<std::string> ignore_search_directories;
 		Directories directories;
 
 		std::string help;

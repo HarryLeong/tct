@@ -77,6 +77,15 @@ namespace tct {
 				return true;
 		});
 
+		opts.add("ignore-search-directory",
+			"isd",
+			"ignore directories with the name. valid for directories specified by -d, and directories or sub-directories specified by -r. don't check the super directory.",
+			std::string(),
+			[&](std::string const &val, std::string *) {
+			ignore_search_directories.push_back(val);
+			return true;
+		});
+
 		opts.add("show-time",
 			"",
 			"Show the time",

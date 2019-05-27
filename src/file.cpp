@@ -103,15 +103,32 @@ namespace tct {
 		return result;
 	}
 
-	void push_files(Files *pfiles, path const &ph, bool recur, push_files_args_t const &args, bool check)
+
+	PushFiles::PushFiles()
+	{
+		onNonExsit = [](path const &ph) {
+			printf("Error: Non-exsit file/direcotry: %s", ph.string().c_str());
+		};
+		onNotDirectory = [](path const &ph) {
+			printf("Error: Not Directory: %s", ph.string().c_str());
+		};
+
+	}
+
+	void PushFiles::push_files(Files *pfiles, path const &ph, bool recur, bool check)
 	{
 		using namespace std;
-		if(check) {
-			if(!exists(ph)) {
-				args.onNonExsit(ph);
+		if (std::find(ignore_search_directories.begin(), ignore_search_directories.end(), ph.filename().string())
+			!= ignore_search_directories.end()) {
+			return;
+		}
+		//printf("%s....\n", ph.filename().string().c_str());
+		if (check) {
+			if (!exists(ph)) {
+				onNonExsit(ph);
 				return;
-			} else if(!is_directory(ph)) {
-				args.onNotDirectory(ph);
+			} else if (!is_directory(ph)) {
+				onNotDirectory(ph);
 				return;
 			}
 		}
@@ -119,27 +136,26 @@ namespace tct {
 		directory_iterator  iter(ph);
 		directory_iterator  end;
 
-		for(iter; iter != end; ++iter) {
+		for (iter; iter != end; ++iter) {
 			path const &ph = iter->path();
-			if(is_directory(ph)) {
-				if(recur) {
-					push_files(pfiles, ph, true, args, false);
+			if (is_directory(ph)) {
+				if (recur) {
+					push_files(pfiles, ph, true, false);
 					continue;
 				}
-			} else if(is_regular_file(ph)) {
-				if(check_extensions(ph.string(), args.extensions())) {
+			} else if (is_regular_file(ph)) {
+				if (check_extensions(ph.string(), extensions)) {
 					pfiles->push_back(ph.string());
 				}
 			}
 		}
 	}
 
-	void push_files(Files *pfiles, Directories const &phs, push_files_args_t const &args, bool check)
+	void PushFiles::push_files(Files *pfiles, Directories const &phs, bool check)
 	{
-		for(Directory const &dir: phs) {
-			push_files(pfiles, path(dir.name), dir.recur, args, check);
+		for (Directory const &dir : phs) {
+			push_files(pfiles, path(dir.name), dir.recur, check);
 		}
 	}
-
 
 }

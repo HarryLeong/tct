@@ -222,16 +222,10 @@ namespace tct {
 		try {
 
 			Files fs;
-
-			push_files_args_t args;
-			args.pextensions = &cmd.extensions;
-			args.onNonExsit = [](path const &ph) {
-				printf("Error: Non-exsit file/direcotry: %s", ph.string().c_str());
-			};
-			args.onNotDirectory = [](path const &ph) {
-				printf("Error: Not Directory: %s", ph.string().c_str());
-			};
-			push_files(&fs, cmd.directories, args);
+			PushFiles pf;
+			pf.extensions = cmd.extensions;
+			pf.ignore_search_directories = cmd.ignore_search_directories;
+			pf.push_files(&fs, cmd.directories);
 
 			Files absfs;
 			Files subfiles;

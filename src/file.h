@@ -59,22 +59,18 @@ namespace tct {
 
 	std::pair<int, int> count_file_nlines(std::string const &filename, char *buf, int buflen);
 
-	struct push_files_args_t
-	{
-		push_files_args_t()
-		{ pextensions = nullptr; }
-		std::vector<std::string> const &extensions() const
-		{ 
-			assert(pextensions != nullptr);
-			return *pextensions;
-		}
-		std::vector<std::string> *pextensions;
+	struct PushFiles {
+
+		std::vector<std::string> ignore_search_directories;
+		std::vector<std::string> extensions;
 		std::function<void(path const &ph)> onNonExsit;
 		std::function<void(path const &ph)> onNotDirectory;
+
+		PushFiles();
+		void push_files(Files *files, path const &ph, bool recur, bool check = true);
+		void push_files(Files *files, Directories const &phs, bool check = true);
 	};
 
-	void push_files(Files *files, path const &ph, bool recur, push_files_args_t const &args, bool check = true);
-	void push_files(Files *files, Directories const &phs, push_files_args_t const &args, bool check = true);
 
 }
 
