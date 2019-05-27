@@ -8,4 +8,7 @@ include_directories( "${PROJECT_SOURCE_DIR}/tct")
 
 file(GLOB_RECURSE tct_SRCS "${PROJECT_SOURCE_DIR}/src/*.cpp" "${PROJECT_SOURCE_DIR}/src/*.h")
 
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
+
 add_executable(tct ${tct_SRCS})
